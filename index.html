@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Flashcard App</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+</head>
+
+<body>
+    <!-- Homescreen -->
+    <div id="homeScreen" class="screen main-screen px-3">
+        <h1 class="text-center my-3">Flashcards</h1>
+
+        <div class="container my-5">
+            <label for="themeSelect" class="h2 text-start">Pick a theme:</label>
+            <select id="themeSelect" class="form-select form-control" aria-label=".form-select">
+                <!-- Options added dynamically -->
+            </select>
+            <button id="newButton" class="btn btn-primary my-3">START</button>
+            <hr />
+            <button id="navigateToImportScreenButton" class="btn btn-success my-3">IMPORT</button>
+        </div>
+    </div>
+
+    <!-- Import Screen -->
+    <div id="importScreen" class="screen main-screen px-3">
+        <h1 class="text-center my-3">Import a new theme</h1>
+        <div class="container my-5">
+            <div class="form-floating">
+                <label for="jsonData">JSON</label>
+                <textarea class="form-control my-3" placeholder="Paste JSON here" id="jsonData"
+                    style="min-height: 250px;"></textarea>
+            </div>
+            <button id="importButton" class="btn btn-success my-3">IMPORT</button>
+        </div>
+    </div>
+
+    <!-- Flashcard Screen -->
+    <div id="flashcardScreen" class="screen">
+        <div id="flashcard" class="flashcard">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="card-front-content">Question</div>
+                </div>
+                <div class="card-back">
+                    <div class="card-back-content">Answer</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="nextDiv">
+            <div class="d-flex flex-row">
+                <button id="wrongButton" class="btn btn-primary mt-3 left">Wrong :(</button>
+                <button id="mehButton" class="btn btn-primary mt-3 middle">Meh!</button>
+                <button id="rightButton" class="btn btn-primary mt-3 right">Right!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- End screen -->
+    <div id="endScreen" class="screen main-screen">
+
+        <div class="container">
+            <div class="row">
+                <h1 class="text-center my-3">Congratulations!</h1>
+            </div>
+
+            <!-- Score -->
+            <div class="row">
+                <div class="col">
+                    <h2 class="text-center my-3">Score</h2>
+                    <div id="score" class="text-center my-3">
+                        <ul>
+                            <li>Right: <span id="rightScore" /></li>
+                            <li>Meh: <span id="mehScore" /></li>
+                            <li>Wrong: <span id="wrongScore" /></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <button id="restartButton" class="btn btn-primary mt-3">Restart</button>
+                </div>
+
+                <div class="col">
+                    <button id="homeButton" class="btn btn-primary mt-3">Home</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
