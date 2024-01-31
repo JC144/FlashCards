@@ -12,6 +12,8 @@ const wrongButton = document.getElementById('wrongButton');
 const mehButton = document.getElementById('mehButton');
 const rightButton = document.getElementById('rightButton');
 
+const importToast = document.getElementById('importToast');
+
 let score = {
     right: 0,
     wrong: 0,
@@ -50,11 +52,26 @@ for (let i = 0; i < localStorage.length; i++) {
 
 // Function to switch screens
 function showScreen(screen) {
-    homeScreen.style.display = 'none';
-    importScreen.style.display = 'none';
-    flashcardScreen.style.display = 'none';
-    endScreen.style.display = 'none';
-    screen.style.display = 'block';
+    homeScreen.classList.remove('d-block');
+    homeScreen.classList.add('d-none');
+
+    importScreen.classList.remove('d-block');
+    importScreen.classList.add('d-none');
+
+    flashcardScreen.classList.remove('d-block');
+    flashcardScreen.classList.add('d-none');
+
+    endScreen.classList.remove('d-flex', 'd-column');
+    endScreen.classList.add('d-none');
+
+    if (screen == endScreen) {
+        endScreen.classList.remove('d-none');
+        endScreen.classList.add('d-flex', 'd-column');
+    }
+    else {
+        screen.classList.remove('d-none');
+        screen.classList.add('d-block');
+    }
 }
 
 function AddThemeToStartMenu(flashcards) {
@@ -69,6 +86,38 @@ showScreen(homeScreen);
 document.getElementById('navigateToImportScreenButton').addEventListener('click', () => {
     showScreen(importScreen);
     jsonTextArea.value = sampleJson;
+});
+
+document.getElementById('copyPromptButton').addEventListener('click', () => {
+    let prompt = `I want you to generate a list of 10 questions about [TOPIC] as a json document. The questions should be in the form of a question and answer. For example, if the topic is European Capitals, you might have a question like 'What is the capital of France?' and the answer would be 'Paris'.\n\n
+    The json should have the following format:\n\n
+    {\n
+        \"theme\": \"European Capitals\",\n
+        \"questions\": [\n
+            {\n
+                \"question\": \"What is the capital of France?\",\n
+                \"answer\": \"Paris\"\n
+            },\n
+            {\n
+                \"question\": \"What is the capital of Germany?\",\n
+                \"answer\": \"Berlin\"\n
+            },\n
+            {\n
+                \"question\": \"What is the capital of Spain?\",\n
+                \"answer\": \"Madrid\"\n
+            }\n
+        ]\n
+    }\n\n`;
+
+    navigator.clipboard.writeText(prompt).then(function () {
+        importToast.classList.add('show');
+    }, function () {
+        alert("Failed to copy prompt to clipboard");
+    });
+});
+
+document.getElementById('closeToast').addEventListener('click', () => {
+    importToast.classList.remove('show');
 });
 
 document.getElementById('importButton').addEventListener('click', () => {
@@ -97,6 +146,7 @@ document.getElementById('newButton').addEventListener('click', (event) => {
 
 document.getElementById('restartButton').addEventListener('click', (event) => {
     currentCardIndex = 0;
+    showScreen(flashcardScreen);
     showFlashcard();
     initScore();
 });

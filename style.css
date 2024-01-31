@@ -141,6 +141,10 @@ button {
     margin-left: 0px;
 }
 
+.rounded-circle{
+    height: 42px;
+}
+
 ul{
     list-style-type: none;
 }
