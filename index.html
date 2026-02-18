@@ -1,155 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flashcard App</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Flashcard app with accelerometer controls">
+    <title>Flashcards</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23000' width='192' height='192'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='120' font-weight='bold' fill='%23fff' font-family='Arial'>F</text></svg>">
+    <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
-    <!-- Homescreen -->
-    <div id="homeScreen" class="screen main-screen px-3">
-        <h1 class="text-center my-3">Flashcards</h1>
-
-        <div class="container my-5">
-            <label for="themeSelect" class="h2 text-start">Pick a theme:</label>
-            <select id="themeSelect" class="form-select form-control" aria-label=".form-select">
-                <!-- Options added dynamically -->
-            </select>
-            <button id="newButton" class="btn btn-primary my-3">START</button>
-            <hr />
-            <button id="navigateToImportScreenButton" class="btn btn-success my-3">IMPORT</button>
+    <!-- Home Screen -->
+    <section id="home-screen" class="screen active">
+        <div class="container">
+            <div class="home-header">
+                <h1>FLASHCARDS</h1>
+                <button id="install-btn" class="btn btn-install" style="display: none;">INSTALL</button>
+            </div>
+            
+            <div class="home-content">
+                <button id="import-btn" class="btn btn-primary">IMPORT NEW</button>
+                
+                <div class="quizzes-section">
+                    <h2>YOUR QUIZZES</h2>
+                    <div id="quizzes-list" class="quizzes-list"></div>
+                    <p id="no-quizzes" class="empty-state">No quizzes yet. Import one to get started.</p>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
 
     <!-- Import Screen -->
-    <div id="importScreen" class="screen main-screen px-3">
-        <h1 class="text-center my-3">Import a new theme</h1>
-        <div class="container my-5">
-            <div class="row">
-                <div class="form-floating">
-                    <label for="jsonData">JSON</label>
-                    <textarea class="form-control my-3" placeholder="Paste JSON here" id="jsonData"
-                        style="min-height: 250px;"></textarea>
-                </div>
-            </div>
-            <div class="row">
-                <!-- Button with copy icon and text: "Copy Chat GPT Prompt"-->
-                <button id="copyPromptButton" class="btn btn-outline-primary my-3">Copy ChatGPT Prompt</button>
-            </div>
-            <div class="row">
-                <button id="importButton" class="btn btn-success my-3">IMPORT</button>
-            </div>
-
-            <div class="row">
-                <div class="toast align-items-center text-white bg-primary border-0" role="alert" aria-live="assertive"
-                    id="importToast" aria-atomic="true">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            A prompt has been added to your clipboard, paste it into <a href="https://chat.openai.com"
-                                class="text-white">chat.openai.com</a> to generate a new theme.
-                        </div>
-                        <button id="closeToast" type="button" class="btn-close btn-close-white me-2 m-auto"
-                            data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                </div>
+    <section id="import-screen" class="screen">
+        <div class="container">
+            <button id="back-from-import" class="btn-back">← BACK</button>
+            <h1>IMPORT QUIZ</h1>
+            
+            <div class="import-content">
+                <p class="instruction">Paste your JSON quiz data below:</p>
+                <textarea id="json-input" class="json-input" placeholder='{"title": "Quiz Name", "questions": [{"q": "Question?", "a": "Answer"}]}' spellcheck="false"></textarea>
+                <button id="import-submit" class="btn btn-primary">IMPORT & START</button>
+                <div id="import-error" class="error-message"></div>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- Flashcard Screen -->
-    <div id="flashcardScreen" class="screen">
-        <div id="flashcard" class="flashcard">
-            <div class="card-inner">
-                <div class="card-front">
-                    <div class="card-front-content">Question</div>
-                </div>
-                <div class="card-back">
-                    <div class="card-back-content">Answer</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="nextDiv">
-            <div class="d-flex flex-row">
-                <button id="wrongButton" class="btn btn-primary mt-3 left">Wrong :(</button>
-                <button id="mehButton" class="btn btn-primary mt-3 middle">Meh!</button>
-                <button id="rightButton" class="btn btn-primary mt-3 right">Right!</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- End screen -->
-    <div id="endScreen" class="screen main-screen d-flex">
-
-        <div class="container d-flex flex-column flex-grow-1">
-            <div class="row">
-                <h1 class="text-center my-3">Congratulations!</h1>
+    <section id="flashcard-screen" class="screen">
+        <div class="flashcard-container">
+            <div class="flashcard-top-row">
+                <div id="quiz-timer" class="quiz-timer">00:00</div>
             </div>
 
-            <!-- Score -->
-            <div class="row flex-grow-1 d-flex align-items-center">
-                <div class="col">
-                    <div id="score" class="text-center my-3 container align-self-center display-4">
-                        <div class="row">
-                            <div class="col">
-                                <span>Right: </span>
-                            </div>
-                            <div class="col">
-                                <span id="rightScore" />
+            <!-- Progress bar -->
+            <div class="progress-bar">
+                <div id="correct-bar" class="correct-bar"></div>
+                <div id="incorrect-bar" class="incorrect-bar"></div>
+            </div>
+
+            <!-- Quiz title and counter -->
+            <div class="quiz-info">
+                <h2 id="quiz-title"></h2>
+                <span id="question-counter"></span>
+            </div>
+
+            <!-- Name input (only on first load) -->
+            <div id="name-prompt" class="name-prompt">
+                <input id="user-name-input" type="text" placeholder="Your name" class="name-input" autocomplete="off">
+                <button id="start-quiz-btn" class="btn btn-primary">START QUIZ</button>
+            </div>
+
+            <!-- Flashcard -->
+            <div id="flashcard-wrapper" class="flashcard-wrapper" style="display: none;">
+                <div id="flashcard" class="flashcard">
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">
+                            <div class="card-content">
+                                <div class="card-text-wrapper">
+                                    <p class="card-label">QUESTION</p>
+                                    <p id="question-text" class="card-text"></p>
+                                </div>
                             </div>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col">
-                                <span>Meh: </span>
-                            </div>
-                            <div class="col">
-                                <span id="mehScore" />
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col">
-                                <span>Wrong: </span>
-                            </div>
-                            <div class="col">
-                                <span id="wrongScore" />
+                        <div class="flashcard-back">
+                            <div class="card-content">
+                                <div class="card-text-wrapper">
+                                    <p class="card-label">ANSWER</p>
+                                    <p id="answer-text" class="card-text"></p>
+                                </div>
+                                <!-- Action buttons on back side -->
+                                <div class="card-actions">
+                                    <button id="wrong-btn" class="btn btn-wrong">✗ WRONG</button>
+                                    <button id="correct-btn" class="btn btn-correct">✓ CORRECT</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <div class="row mb-3">
-                <div class="col">
-                    <button type="button" id="restartButton" class="btn btn-primary rounded-circle">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                            class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd"
-                                d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
-                            <path
-                                d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
-                        </svg>
-                    </button>
+    <!-- End Screen -->
+    <section id="end-screen" class="screen">
+        <div class="container">
+            <h1>RESULTS</h1>
+            
+            <div class="results-content">
+                <div class="result-display">
+                    <div class="result-score">
+                        <span id="final-correct" class="score-correct">0</span>
+                        <span class="score-separator">/</span>
+                        <span id="final-total" class="score-total">5</span>
+                    </div>
+                    <p id="user-name-display" class="player-name"></p>
+                    <p id="final-time" class="result-time">TIME 00:00</p>
                 </div>
 
-                <div class="col">
-                    <button id="homeButton" class="btn btn-primary rounded-circle">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                            class="bi bi-house" viewBox="0 0 16 16">
-                            <path
-                                d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z" />
-                        </svg>
-                    </button>
+                <div class="previous-results">
+                    <h3>PREVIOUS RESULTS</h3>
+                    <div id="results-history" class="results-history"></div>
                 </div>
+
+                <button id="home-btn" class="btn btn-primary">HOME</button>
             </div>
         </div>
-    </div>
+    </section>
 
-    <script src="script.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(registration => {
+                    console.log('Service Worker registered:', registration);
+                })
+                .catch(error => {
+                    console.log('Service Worker registration failed:', error);
+                });
+        }
+    </script>
 </body>
-
 </html>

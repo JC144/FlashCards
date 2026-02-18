@@ -1,0 +1,15 @@
+{
+  "title": "Spanish Vocabulary",
+  "questions": [
+    {"q": "What is 'hello' in Spanish?", "a": "Hola"},
+    {"q": "What is 'goodbye' in Spanish?", "a": "Adiós"},
+    {"q": "What is 'thank you' in Spanish?", "a": "Gracias"},
+    {"q": "What is 'please' in Spanish?", "a": "Por favor"},
+    {"q": "What is 'water' in Spanish?", "a": "Agua"},
+    {"q": "What is 'food' in Spanish?", "a": "Comida"},
+    {"q": "What is 'friend' in Spanish?", "a": "Amigo"},
+    {"q": "What is 'love' in Spanish?", "a": "Amor"},
+    {"q": "What is 'house' in Spanish?", "a": "Casa"},
+    {"q": "What is 'cat' in Spanish?", "a": "Gato"}
+  ]
+}
