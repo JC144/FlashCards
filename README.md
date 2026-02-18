@@ -28,6 +28,9 @@ A mobile-first flashcard web application built with HTML, vanilla JavaScript, an
 
 1. Clone or download the repository
 2. Serve files over HTTPS (required for PWA and accelerometer):
+  # using Live server extension
+  Click Go Live in Visual Studio right bottom corner
+
    ```bash
    # Using Python 3
    python -m http.server 8000
@@ -35,7 +38,7 @@ A mobile-first flashcard web application built with HTML, vanilla JavaScript, an
    # Using Node.js http-server
    npx http-server -c-1
    ```
-3. Open `https://localhost:8000` (or appropriate localhost address)
+3. Open `https://localhost:5500` (or appropriate localhost address)
 
 ### For Testing on Phone
 

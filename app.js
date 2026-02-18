@@ -191,6 +191,12 @@ const GameManager = {
     quizStartTimestamp: null,
     elapsedMs: 0,
     timerIntervalId: null,
+    tiltOffsetX: 0,
+    tiltOffsetY: 0,
+    maxTiltOffsetPx: 8,
+    tiltEnabled: false,
+    tiltRafId: null,
+    tiltRotationOverride: null,
 
     loadQuiz(quizId) {
         this.currentQuiz = StorageManager.getQuiz(quizId);
@@ -285,6 +291,7 @@ const GameManager = {
         flashcard.classList.remove('answer-success', 'answer-wrong', 'card-exit-left', 'card-enter-right', 'card-pre-enter-right');
         flashcard.style.transform = '';
         flashcard.style.opacity = '';
+        this.tiltRotationOverride = null;
         this.setFlipState(false, { animate: false });
         cardInner.style.transition = this.flipTransition;
         
@@ -341,7 +348,8 @@ const GameManager = {
                 } else {
                     dragRotation = Math.max(-180, Math.min(180, rotation));
                 }
-                cardInner.style.transform = `rotateY(${dragRotation}deg)`;
+                this.tiltRotationOverride = dragRotation;
+                this.applyCardTransform(dragRotation);
             }
         };
 
@@ -351,6 +359,7 @@ const GameManager = {
             // Restore transition
             cardInner.style.transition = this.flipTransition;
             flashcard.classList.remove('dragging');
+            this.tiltRotationOverride = null;
 
             // Flip when reaching at least 50% rotation (90deg).
             if (hasHorizontalDrag) {
@@ -391,6 +400,7 @@ const GameManager = {
             if (!isDragging) return;
             cardInner.style.transition = this.flipTransition;
             this.setFlipState(this.isFlipped);
+            this.tiltRotationOverride = null;
             isDragging = false;
             hasHorizontalDrag = false;
             flashcard.classList.remove('dragging');
@@ -427,6 +437,7 @@ const GameManager = {
             if (activePointerId !== e.pointerId) return;
             cardInner.style.transition = this.flipTransition;
             this.setFlipState(this.isFlipped);
+            this.tiltRotationOverride = null;
             isDragging = false;
             hasHorizontalDrag = false;
             activePointerId = null;
@@ -458,13 +469,8 @@ const GameManager = {
             this.nextQuestion(false);
         });
 
-        // Accelerometer tilt
-        if (window.DeviceOrientationEvent && window.navigator.permissions) {
-            window.navigator.permissions.query({ name: 'accelerometer' }).then(permissionStatus => {
-                if (permissionStatus.state === 'granted') {
-                    this.enableTilt(cardInner);
-                }
-            });
+        if (window.DeviceOrientationEvent) {
+            this.enableTilt();
         }
     },
 
@@ -478,7 +484,7 @@ const GameManager = {
         this.isFlipped = !!flipped;
         this.currentRotation = this.isFlipped ? 180 : 0;
         cardInner.style.transition = animate ? this.flipTransition : 'none';
-        cardInner.style.transform = `rotateY(${this.currentRotation}deg)`;
+        this.applyCardTransform();
     },
 
     setRotationState(rotation, flipped) {
@@ -486,7 +492,7 @@ const GameManager = {
         this.currentRotation = rotation;
         this.isFlipped = !!flipped;
         cardInner.style.transition = this.flipTransition;
-        cardInner.style.transform = `rotateY(${this.currentRotation}deg)`;
+        this.applyCardTransform();
 
         // Normalize equivalent angles after the animation to keep next drags stable.
         setTimeout(() => {
@@ -494,11 +500,25 @@ const GameManager = {
             if (this.currentRotation !== normalized) {
                 this.currentRotation = normalized;
                 cardInner.style.transition = 'none';
-                cardInner.style.transform = `rotateY(${normalized}deg)`;
+                this.applyCardTransform(normalized);
                 void cardInner.offsetWidth;
                 cardInner.style.transition = this.flipTransition;
             }
         }, 330);
+    },
+
+    applyCardTransform(rotation = null) {
+        const flashcard = document.getElementById('flashcard');
+        if (!flashcard) return;
+
+        const cardInner = flashcard.querySelector('.flashcard-inner');
+        if (!cardInner) return;
+
+        const baseRotation = rotation !== null
+            ? rotation
+            : (this.tiltRotationOverride !== null ? this.tiltRotationOverride : this.currentRotation);
+
+        cardInner.style.transform = `translate3d(${this.tiltOffsetX}px, ${this.tiltOffsetY}px, 0) rotateY(${baseRotation}deg)`;
     },
 
     wait(ms) {
@@ -553,19 +573,25 @@ const GameManager = {
         flashcard.classList.remove('answer-success', 'answer-wrong');
     },
 
-    enableTilt(cardInner) {
+    enableTilt() {
+        if (this.tiltEnabled) return;
+        this.tiltEnabled = true;
+
         window.addEventListener('deviceorientation', (e) => {
-            const alpha = e.alpha; // Z axis rotation (0-360)
-            const beta = e.beta;   // X axis rotation (-180 to 180)
-            const gamma = e.gamma; // Y axis rotation (-90 to 90)
-            
-            // Subtle tilt effect (reduce intensity by dividing)
-            const tiltX = beta / 20;
-            const tiltY = gamma / 20;
-            
-            cardInner.style.setProperty('--tilt-x', `${tiltX}deg`);
-            cardInner.style.setProperty('--tilt-y', `${tiltY}deg`);
-        });
+            if (typeof e.beta !== 'number' || typeof e.gamma !== 'number') return;
+
+            const normalizedX = Math.max(-1, Math.min(1, e.gamma / 45));
+            const normalizedY = Math.max(-1, Math.min(1, e.beta / 45));
+
+            this.tiltOffsetX = normalizedX * this.maxTiltOffsetPx;
+            this.tiltOffsetY = normalizedY * this.maxTiltOffsetPx;
+
+            if (this.tiltRafId) return;
+            this.tiltRafId = requestAnimationFrame(() => {
+                this.tiltRafId = null;
+                this.applyCardTransform();
+            });
+        }, { passive: true });
     },
 
     async nextQuestion(isCorrect) {

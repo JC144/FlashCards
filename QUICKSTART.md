@@ -9,7 +9,7 @@ Choose your method:
 **Using Python (recommended):**
 ```bash
 cd d:\All\Dev\FlashCard
-python -m http.server 8000
+python -m http.server 5500
 ```
 
 **Using Node.js:**
@@ -18,12 +18,12 @@ cd d:\All\Dev\FlashCard
 npx http-server -c-1
 ```
 
-**Using any simple HTTP server** at `https://localhost:8000`
+**Using Live server extension** at `https://localhost:5500`
 
 ### 2. Open in Browser
 
-- Desktop: `http://localhost:8000`
-- Mobile (local network): `http://[your-ip]:8000`
+- Desktop: `http://localhost:5500`
+- Mobile (local network): `http://[your-ip]:5500`
 - For HTTPS (PWA): Use ngrok or serve-https
 
 ### 3. Import Your First Quiz
