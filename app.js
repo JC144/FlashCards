@@ -191,12 +191,13 @@ const GameManager = {
     quizStartTimestamp: null,
     elapsedMs: 0,
     timerIntervalId: null,
-    tiltOffsetX: 0,
-    tiltOffsetY: 0,
-    maxTiltOffsetPx: 8,
+    tiltRotationOffset: 0,
+    maxTiltRotationDeg: 8,
     tiltEnabled: false,
     tiltRafId: null,
     tiltRotationOverride: null,
+    tiltNeutralAccelX: null,
+    tiltSmoothing: 0.2,
 
     loadQuiz(quizId) {
         this.currentQuiz = StorageManager.getQuiz(quizId);
@@ -210,6 +211,8 @@ const GameManager = {
         this.correct = 0;
         this.incorrect = 0;
         this.isFlipped = false;
+        this.tiltRotationOffset = 0;
+        this.tiltNeutralAccelX = null;
         this.stopQuizTimer();
         this.renderQuizTimer(0);
         
@@ -469,7 +472,7 @@ const GameManager = {
             this.nextQuestion(false);
         });
 
-        if (window.DeviceOrientationEvent) {
+        if (window.DeviceMotionEvent) {
             this.enableTilt();
         }
     },
@@ -518,7 +521,8 @@ const GameManager = {
             ? rotation
             : (this.tiltRotationOverride !== null ? this.tiltRotationOverride : this.currentRotation);
 
-        cardInner.style.transform = `translate3d(${this.tiltOffsetX}px, ${this.tiltOffsetY}px, 0) rotateY(${baseRotation}deg)`;
+        const tiltRotation = this.tiltRotationOverride !== null ? 0 : this.tiltRotationOffset;
+        cardInner.style.transform = `rotateY(${baseRotation + tiltRotation}deg)`;
     },
 
     wait(ms) {
@@ -577,20 +581,30 @@ const GameManager = {
         if (this.tiltEnabled) return;
         this.tiltEnabled = true;
 
-        window.addEventListener('deviceorientation', (e) => {
-            if (typeof e.beta !== 'number' || typeof e.gamma !== 'number') return;
-
-            const normalizedX = Math.max(-1, Math.min(1, e.gamma / 45));
-            const normalizedY = Math.max(-1, Math.min(1, e.beta / 45));
-
-            this.tiltOffsetX = normalizedX * this.maxTiltOffsetPx;
-            this.tiltOffsetY = normalizedY * this.maxTiltOffsetPx;
+        const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+        const applyTiltFromNormalizedX = (normalizedX) => {
+            const targetRotation = normalizedX * this.maxTiltRotationDeg;
+            this.tiltRotationOffset += (targetRotation - this.tiltRotationOffset) * this.tiltSmoothing;
 
             if (this.tiltRafId) return;
             this.tiltRafId = requestAnimationFrame(() => {
                 this.tiltRafId = null;
                 this.applyCardTransform();
             });
+        };
+
+        // Use gravity x-axis as a proxy for device roll to drive subtle Y-axis card tilt.
+        window.addEventListener('devicemotion', (e) => {
+            const gravity = e.accelerationIncludingGravity;
+            if (!gravity || typeof gravity.x !== 'number') return;
+
+            if (this.tiltNeutralAccelX === null) {
+                this.tiltNeutralAccelX = gravity.x;
+            }
+
+            const deltaX = gravity.x - this.tiltNeutralAccelX;
+            const normalizedX = clamp(deltaX / 3.5, -1, 1);
+            applyTiltFromNormalizedX(normalizedX);
         }, { passive: true });
     },
 
@@ -809,13 +823,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial render
     UIManager.showHome();
     
-    // Request accelerometer permission for iOS 13+
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // Request motion permission for iOS 13+
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
         document.addEventListener('click', () => {
-            DeviceOrientationEvent.requestPermission()
+            DeviceMotionEvent.requestPermission()
                 .then(permissionState => {
                     if (permissionState === 'granted') {
-                        window.addEventListener('deviceorientation', () => {});
+                        window.addEventListener('devicemotion', () => {});
                     }
                 })
                 .catch(console.error);

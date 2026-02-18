@@ -2,7 +2,7 @@
   "name": "Flashcards",
   "short_name": "Flashcards",
   "description": "A mobile flashcard app with accelerometer controls and local storage",
-  "start_url": "/index.html",
+  "start_url": "Flashcards/index.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
