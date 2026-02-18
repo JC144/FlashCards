@@ -196,7 +196,6 @@ const GameManager = {
     tiltEnabled: false,
     tiltRafId: null,
     tiltRotationOverride: null,
-    tiltNeutralAccelX: null,
     tiltSmoothing: 0.2,
 
     loadQuiz(quizId) {
@@ -212,7 +211,6 @@ const GameManager = {
         this.incorrect = 0;
         this.isFlipped = false;
         this.tiltRotationOffset = 0;
-        this.tiltNeutralAccelX = null;
         this.stopQuizTimer();
         this.renderQuizTimer(0);
         
@@ -521,7 +519,9 @@ const GameManager = {
             ? rotation
             : (this.tiltRotationOverride !== null ? this.tiltRotationOverride : this.currentRotation);
 
-        const tiltRotation = this.tiltRotationOverride !== null ? 0 : this.tiltRotationOffset;
+        const tiltRotation = this.tiltRotationOverride !== null
+            ? 0
+            : (this.isFlipped ? -this.tiltRotationOffset : this.tiltRotationOffset);
         cardInner.style.transform = `rotateY(${baseRotation + tiltRotation}deg)`;
     },
 
@@ -582,6 +582,7 @@ const GameManager = {
         this.tiltEnabled = true;
 
         const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+        const withDeadZone = (value, zone = 0.04) => (Math.abs(value) < zone ? 0 : value);
         const applyTiltFromNormalizedX = (normalizedX) => {
             const targetRotation = normalizedX * this.maxTiltRotationDeg;
             this.tiltRotationOffset += (targetRotation - this.tiltRotationOffset) * this.tiltSmoothing;
@@ -598,12 +599,8 @@ const GameManager = {
             const gravity = e.accelerationIncludingGravity;
             if (!gravity || typeof gravity.x !== 'number') return;
 
-            if (this.tiltNeutralAccelX === null) {
-                this.tiltNeutralAccelX = gravity.x;
-            }
-
-            const deltaX = gravity.x - this.tiltNeutralAccelX;
-            const normalizedX = clamp(deltaX / 3.5, -1, 1);
+            // Absolute mapping: when phone is upright, gravity.x is near 0 -> card is straight.
+            const normalizedX = withDeadZone(clamp(gravity.x / 6, -1, 1));
             applyTiltFromNormalizedX(normalizedX);
         }, { passive: true });
     },
